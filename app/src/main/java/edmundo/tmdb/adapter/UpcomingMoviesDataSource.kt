@@ -69,15 +69,6 @@ class UpcomingMoviesDataSource(private val movieRepository: MovieRepository,
 
     }
 
-    fun retry() {
-        if (retryCompletable != null) {
-            compositeDisposable.add(retryCompletable!!
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe())
-        }
-    }
-
     private fun setRetry(action: Action?) {
         retryCompletable = if (action == null) null else Completable.fromAction(action)
     }

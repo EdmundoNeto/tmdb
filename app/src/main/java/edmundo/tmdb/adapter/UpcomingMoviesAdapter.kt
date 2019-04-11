@@ -11,10 +11,6 @@ import edmundo.tmdb.BR
 import edmundo.tmdb.MovieDetailActivity
 import edmundo.tmdb.databinding.UpcomingMoviesItemBinding
 import edmundo.tmdb.model.Result
-import edmundo.tmdb.utils.CommonUtils
-import edmundo.tmdb.utils.CommonUtils.returnReleaseDate
-import io.reactivex.Observable
-import io.reactivex.subjects.PublishSubject
 import javax.inject.Inject
 import android.support.v4.app.ActivityOptionsCompat
 import android.view.View
@@ -24,10 +20,6 @@ import edmundo.tmdb.utils.StateEnum
 
 
 class UpcomingMoviesAdapter @Inject constructor(var mFilteredList: MutableList<Result>): PagedListAdapter<Result, RecyclerView.ViewHolder>(MovieCallback) {
-
-
-    val mViewClickSubject = PublishSubject.create<Int>()
-    val selectMovieEvent: Observable<Int> = mViewClickSubject
 
     private var state = StateEnum.LOADING
 
@@ -44,12 +36,11 @@ class UpcomingMoviesAdapter @Inject constructor(var mFilteredList: MutableList<R
     }
 
     override fun getItemCount(): Int {
-        return mFilteredList.size
+        return super.getItemCount()
     }
 
     override fun onBindViewHolder(baseViewHolder: RecyclerView.ViewHolder, position: Int) {
-        if (mFilteredList.size > 0)
-            (baseViewHolder as? MovieViewHolder)?.bind(mFilteredList[position])
+        (baseViewHolder as? MovieViewHolder)?.bind(getItem(position)!!)
     }
 
 
@@ -85,7 +76,7 @@ class UpcomingMoviesAdapter @Inject constructor(var mFilteredList: MutableList<R
 
                 val options = ActivityOptionsCompat.makeSceneTransitionAnimation(context as Activity, p1, p2, p3)
                 context.startActivity(
-                    Intent(context, MovieDetailActivity::class.java).putExtra("movieId", mFilteredList[adapterPosition].id),
+                    Intent(context, MovieDetailActivity::class.java).putExtra("movieId", getItem(adapterPosition)!!.id),
                     options.toBundle()
                 )
             }

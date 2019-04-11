@@ -21,14 +21,16 @@ import javax.inject.Inject
 
 class UpcomingMoviesViewModel @Inject constructor(private val movieRepository: MovieRepository): BaseViewModel() {
 
+    private val pageSize = 10
     var movieList: LiveData<PagedList<Result>>
     private val compositeDisposable = CompositeDisposable()
-    private val upcomingMoviesDataSourceFactory = UpcomingMoviesDataSourceFactory(compositeDisposable, movieRepository)
+    private val upcomingMoviesDataSourceFactory: UpcomingMoviesDataSourceFactory
 
     init {
+        upcomingMoviesDataSourceFactory = UpcomingMoviesDataSourceFactory(compositeDisposable, movieRepository)
         val config = PagedList.Config.Builder()
-            .setPageSize(20)
-            .setInitialLoadSizeHint(20 * 2)
+            .setPageSize(pageSize)
+            .setInitialLoadSizeHint(pageSize * 2)
             .setEnablePlaceholders(false)
             .build()
         movieList = LivePagedListBuilder<Int, Result>(upcomingMoviesDataSourceFactory, config).build()
@@ -41,41 +43,9 @@ class UpcomingMoviesViewModel @Inject constructor(private val movieRepository: M
         return movieList.value?.isEmpty() ?: true
     }
 
-    var upComingMovies: MutableLiveData<List<Result>> = MutableLiveData()
-
-    val movieArrayList: ObservableList<Result> = ObservableArrayList()
-
-    lateinit var disposableObserver: DisposableObserver<List<Result>>
-
-    fun addMoviesToList(list: List<Result>) {
-        movieArrayList.clear()
-        movieArrayList.addAll(list)
+    override fun onCleared() {
+        super.onCleared()
+        compositeDisposable.dispose()
     }
 
-
-    fun upComingMoviesResult(): LiveData<List<Result>> {
-        return upComingMovies
-    }
-
-//    fun getUpComingMovies() {
-//        disposableObserver = object: DisposableObserver<List<Result>>() {
-//            override fun onComplete() {
-//                vmLoader.postValue(false)
-//            }
-//
-//            override fun onNext(t: List<Result>) {
-//                upComingMovies.postValue(t)
-//            }
-//
-//            override fun onError(e: Throwable) {
-//                vmLoader.postValue(false)
-//                vmError.postValue(e.message)
-//            }
-//        }
-//
-//        movieRepository.getUpcoming()
-//            .subscribeOn(Schedulers.io())
-//            .observeOn(AndroidSchedulers.mainThread())
-//            .subscribe(disposableObserver)
-//    }
 }

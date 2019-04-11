@@ -24,65 +24,24 @@ class MovieRepository @Inject constructor(private val movieClient: MovieClient) 
         return Observable.create {
 
             val emitter = it
-            var gson = Gson()
 
             movieClient.getUpcomingMovies(Constants.API_KEY, Constants.LANGUAGE, page!!)
-                .enqueue(object : Callback<JsonObject> {
-                override fun onResponse(call: Call<JsonObject>, response: Response<JsonObject>) {
-                        val allMovies = ArrayList<Result>()
-                        val results = response.body()!!["results"]!!.asJsonArray
-
-                        results.forEach {
-                            allMovies.add(gson.fromJson(it.toString(), Result::class.java))
-                        }
-
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(object : DisposableSingleObserver<UpcomingMovie>() {
+                    override fun onSuccess(t: UpcomingMovie) {
                         if (!emitter.isDisposed){
-                            emitter.onNext(allMovies)
+                            emitter.onNext(t.results)
                         }
 
-                        emitter.onComplete()
-                }
-                override fun onFailure(call: Call<JsonObject>, t: Throwable) {
-                    emitter.onError(t)
-                }
+                    }
 
-            })
+                    override fun onError(e: Throwable) {
+                        emitter.onError(e)
+                    }
+                })
         }
     }
-
-
-//    fun getUpcoming(page: Int?): Observable<List<Result>> {
-//
-//        return Observable.create {
-//
-//            val emitter = it
-//            var gson = Gson()
-//
-//            movieClient.getUpcomingMovies(Constants.API_KEY, Constants.LANGUAGE, page!!)
-//                .subscribeOn(Schedulers.newThread())
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .subscribeWith(object : DisposableSingleObserver<JsonObject>() {
-//                    override fun onSuccess(t: JsonObject) {
-//                        val allMovies = ArrayList<Result>()
-//                        val results = t.get("results").asJsonArray
-//
-//                        results.forEach {
-//                            allMovies.add(gson.fromJson(it.toString(), Result::class.java))
-//                        }
-//
-//                        if (!emitter.isDisposed){
-//                            emitter.onNext(allMovies)
-//                        }
-//
-//                        emitter.onComplete()
-//                    }
-//
-//                    override fun onError(e: Throwable) {
-//                        emitter.onError(e)
-//                    }
-//                })
-//        }
-//    }
 
     fun getMovieDetail(movieId: Int): Observable<MovieDetail> {
 
